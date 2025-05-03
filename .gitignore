@@ -1,0 +1,6 @@
+# Ignore all json files, except for templates in config folder
+*.json
+!config/*
+
+# Build folder
+build/
