@@ -30,14 +30,16 @@ func LoadConfigurations(filepath string) (*Configurations, error) {
 
 	var configs Configurations
 
-	// read configuration file
-	fdata, err := os.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(fdata, &configs)
-	if err != nil {
-		return nil, err
+	// read configurations file if exists
+	if _, err := os.Stat(filepath); err == nil {
+		fdata, err := os.ReadFile(filepath)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(fdata, &configs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// overwrite environment variables
