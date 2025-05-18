@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
+	"net/http"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/IBM/sarama"
@@ -16,9 +17,12 @@ var (
 	kafkaConn sarama.SyncProducer
 )
 
-func p2kMainLoop(sub *pubsub.Subscription, topic string) error {
+func p2kMainLoop(sub *pubsub.Subscription, topic string, metrics *Metrics) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	err := sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+		now := time.Now().UnixMilli()
+		metrics.LastPubsub.Value = float64(now)
+		metrics.LastPubsub.Timestamp = now
 		msg := &sarama.ProducerMessage{
 			Topic: topic,
 			Value: sarama.StringEncoder(string(m.Data)),
@@ -27,6 +31,7 @@ func p2kMainLoop(sub *pubsub.Subscription, topic string) error {
 		if err != nil {
 			cancel()
 		}
+		metrics.LastKafka.Value = float64(time.Now().UnixMilli())
 		m.Ack()
 	})
 	if err != nil {
@@ -37,8 +42,12 @@ func p2kMainLoop(sub *pubsub.Subscription, topic string) error {
 
 func main() {
 	var configPath string
+	var serverAddr string
+	var serverPort string
 
 	flag.StringVar(&configPath, "c", "config.json", "Path to configuration file")
+	flag.StringVar(&serverAddr, "a", "localhost", "Server Address")
+	flag.StringVar(&serverPort, "p", "8080", "Server Port")
 	flag.Parse()
 
 	log.Println("Load configurations")
@@ -46,6 +55,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// runtime variables
+	running := false
+	metrics := InitiateMetrics()
+
+	// http endpoints
+	rootHandler := http.NewServeMux()
+	rootHandler.HandleFunc("/", generalHandler)
+	rootHandler.HandleFunc("/health", healthHandler(&running))
+	rootHandler.HandleFunc("/metrics", metricsHandler(metrics))
+
+	server := http.Server{
+		Addr:    serverAddr + ":" + serverPort,
+		Handler: rootHandler,
+	}
+	log.Printf("Start server at %s\n", server.Addr)
+	// launch server in a go routine
+	go server.ListenAndServe()
 
 	log.Println("Create Pub/Sub Client")
 	pubsubClient, err := pubsub.NewClient(context.Background(), configs.Pubsub.Project)
@@ -64,8 +91,12 @@ func main() {
 	}
 	defer kafkaConn.Close()
 
-	log.Println("Start main loop")
-	err = p2kMainLoop(pubsubSubscriper, configs.Kafka.Topic)
+	time.Sleep(5 * time.Second)
 
-	fmt.Println("End")
+	running = true
+
+	log.Println("Start main loop")
+	err = p2kMainLoop(pubsubSubscriper, configs.Kafka.Topic, metrics)
+
+	log.Println("End")
 }
