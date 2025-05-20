@@ -32,6 +32,7 @@ func p2kMainLoop(sub *pubsub.Subscription, topic string, metrics *Metrics) error
 			cancel()
 		}
 		metrics.LastKafka.Value = float64(time.Now().UnixMilli())
+		metrics.ValidMsg.AddTime()
 		m.Ack()
 	})
 	if err != nil {
