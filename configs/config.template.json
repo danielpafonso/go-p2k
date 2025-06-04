@@ -1,0 +1,13 @@
+{
+  "pubsub": {
+    "project": "acme",
+    "subscription": "sub-events"
+  },
+  "kafka": {
+    "endpoints": ["localhost:9094"],
+    "useTls": false,
+    "caFile": "ca file",
+    "crtFile": "crt file",
+    "keyFile": "key file"
+  }
+}
