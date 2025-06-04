@@ -1,4 +1,4 @@
-encode=$(echo -n $1 | base64)
+encode=$(echo -n $1 | base64 -w 0)
 printf '{"messages": [{"data": "%s"}]}' $encode
 
 curl -H "Content-Type: application/json" \
