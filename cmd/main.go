@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -17,22 +18,33 @@ var (
 	kafkaConn sarama.SyncProducer
 )
 
-func p2kMainLoop(sub *pubsub.Subscription, topic string, metrics *Metrics) error {
+func p2kMainLoop(sub *pubsub.Subscription, metrics *Metrics) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	err := sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		now := time.Now().UnixMilli()
 		metrics.LastPubsub.Value = float64(now)
 		metrics.LastPubsub.Timestamp = now
-		msg := &sarama.ProducerMessage{
-			Topic: topic,
-			Value: sarama.StringEncoder(string(m.Data)),
-		}
-		_, _, err := kafkaConn.SendMessage(msg)
+		// process message
+		kafkaConfig, bytesMsg, err := internal.ProcessMsg(m.Data)
 		if err != nil {
-			cancel()
+			log.Println("error on processing message:", err)
+			log.Printf("DEADLETTER %s\n", string(m.Data))
+		} else {
+			if kafkaConfig.Topic == "" {
+				fmt.Println("no topic in _kafka field")
+			} else {
+				msg := &sarama.ProducerMessage{
+					Topic: kafkaConfig.Topic,
+					Value: sarama.StringEncoder(string(bytesMsg)),
+				}
+				_, _, err = kafkaConn.SendMessage(msg)
+				if err != nil {
+					cancel()
+				}
+				metrics.LastKafka.Value = float64(time.Now().UnixMilli())
+				metrics.ValidMsg.AddTime()
+			}
 		}
-		metrics.LastKafka.Value = float64(time.Now().UnixMilli())
-		metrics.ValidMsg.AddTime()
 		m.Ack()
 	})
 	if err != nil {
@@ -97,7 +109,7 @@ func main() {
 	running = true
 
 	log.Println("Start main loop")
-	err = p2kMainLoop(pubsubSubscriper, configs.Kafka.Topic, metrics)
+	err = p2kMainLoop(pubsubSubscriper, metrics)
 
 	log.Println("End")
 }
