@@ -14,7 +14,6 @@ type PubsubConfigurations struct {
 
 type KafkaConfigurations struct {
 	Endpoints []string `json:"endpoints"`
-	Topic     string   `json:"topic"`
 	UseTLS    bool     `json:"useTls"`
 	CaFile    string   `json:"caFile"`
 	CrtFile   string   `json:"crtFile"`
@@ -51,9 +50,6 @@ func LoadConfigurations(filepath string) (*Configurations, error) {
 	}
 	if value, ok := os.LookupEnv("KAFKA_ENDPOINTS"); ok {
 		configs.Kafka.Endpoints = strings.Split(value, ",")
-	}
-	if value, ok := os.LookupEnv("KAFA_TOPIC"); ok {
-		configs.Kafka.Topic = value
 	}
 	if value, ok := os.LookupEnv("KAFKA_USE_TLS"); ok {
 		configs.Kafka.UseTLS, _ = strconv.ParseBool(value)
