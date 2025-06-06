@@ -14,13 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Health Check and Metrics endpoints
 - Initial Metrics
 - Multiple Kafka Cluster publisher, with Deadletter to console
-- Environment Variable to overwrite kafka configuration, `KAFKA_CLUSTERS`
+- Environment Variable to overwrite Kafka configuration, `KAFKA_CLUSTERS`
 - Pub/Sub message parsing from json
 
 ### Changed
 
 - Use log instead of fmt for runtime log messages
--
 
 ### Removed
 
