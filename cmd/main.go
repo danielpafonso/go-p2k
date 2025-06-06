@@ -132,8 +132,6 @@ func main() {
 		defer connection.Close()
 	}
 
-	time.Sleep(5 * time.Second)
-
 	running = true
 
 	log.Println("Start main loop")

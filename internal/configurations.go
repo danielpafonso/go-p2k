@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
-	// "strings"
 )
 
 type PubsubConfigurations struct {
@@ -57,7 +56,6 @@ func LoadConfigurations(filepath string) (*Configurations, error) {
 		if err != nil {
 			return nil, err
 		}
-		// configs.Kafka.Endpoints = strings.Split(value, ",")
 	}
 	if value, ok := os.LookupEnv("KAFKA_USE_TLS"); ok {
 		configs.Kafka.UseTLS, _ = strconv.ParseBool(value)
