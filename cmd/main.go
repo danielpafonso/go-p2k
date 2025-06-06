@@ -15,7 +15,8 @@ import (
 )
 
 var (
-	kafkaConn sarama.SyncProducer
+	kafkaConn    sarama.SyncProducer
+	kafkaClients map[string]sarama.SyncProducer
 )
 
 func p2kMainLoop(sub *pubsub.Subscription, metrics *Metrics) error {
@@ -33,16 +34,35 @@ func p2kMainLoop(sub *pubsub.Subscription, metrics *Metrics) error {
 			if kafkaConfig.Topic == "" {
 				fmt.Println("no topic in _kafka field")
 			} else {
-				msg := &sarama.ProducerMessage{
-					Topic: kafkaConfig.Topic,
-					Value: sarama.StringEncoder(string(bytesMsg)),
+				// check clusters
+				for _, cluster := range kafkaConfig.Clusters {
+					if conn, ok := kafkaClients[cluster]; ok {
+						msg := &sarama.ProducerMessage{
+							Topic: kafkaConfig.Topic,
+							Value: sarama.StringEncoder(string(bytesMsg)),
+						}
+						_, _, err = conn.SendMessage(msg)
+						if err != nil {
+							cancel()
+						}
+						metrics.LastKafka.Value = float64(time.Now().UnixMilli())
+						metrics.ValidMsg.AddTime()
+					} else if cluster == "all" {
+						for _, conn := range kafkaClients {
+							msg := &sarama.ProducerMessage{
+								Topic: kafkaConfig.Topic,
+								Value: sarama.StringEncoder(string(bytesMsg)),
+							}
+							_, _, err = conn.SendMessage(msg)
+							if err != nil {
+								cancel()
+							}
+						}
+					} else {
+						fmt.Printf("no configured cluster: %s\n", cluster)
+						log.Printf("DEADLETTER %s\n", string(m.Data))
+					}
 				}
-				_, _, err = kafkaConn.SendMessage(msg)
-				if err != nil {
-					cancel()
-				}
-				metrics.LastKafka.Value = float64(time.Now().UnixMilli())
-				metrics.ValidMsg.AddTime()
 			}
 		}
 		m.Ack()
@@ -95,14 +115,22 @@ func main() {
 	defer pubsubClient.Close()
 	pubsubSubscriper := pubsubClient.Subscription(configs.Pubsub.Subscription)
 
-	log.Println("Create Kafka Client")
-	kafkaConfig := sarama.NewConfig()
-	kafkaConfig.Producer.Return.Successes = true
-	kafkaConn, err = sarama.NewSyncProducer(configs.Kafka.Endpoints, kafkaConfig)
-	if err != nil {
-		panic(err)
+	log.Println("Create Kafka Clients")
+	// Create Kafka Clients
+	kafkaClients = make(map[string]sarama.SyncProducer)
+
+	for _, config := range configs.Kafka.Clusters {
+		cfg := sarama.NewConfig()
+		cfg.Producer.Return.Successes = true
+		connection, err := sarama.NewSyncProducer(config.Endpoints, cfg)
+		if err != nil {
+			panic(err)
+		}
+		kafkaClients[config.Name] = connection
+
+		// defer instead of creating a "defer" function
+		defer connection.Close()
 	}
-	defer kafkaConn.Close()
 
 	time.Sleep(5 * time.Second)
 

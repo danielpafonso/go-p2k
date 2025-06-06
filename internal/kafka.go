@@ -3,11 +3,12 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 )
 
 type KafkaConfig struct {
-	Topic   string
-	Cluster string
+	Topic    string
+	Clusters []string
 }
 
 // func ProcessMsg(data []byte) map[string]interface{} {
@@ -18,7 +19,7 @@ func ProcessMsg(data []byte) (*KafkaConfig, []byte, error) {
 		return nil, make([]byte, 0), errors.New("message not json formated")
 	}
 	kCfg := KafkaConfig{
-		Cluster: "all",
+		Clusters: []string{"all"},
 	}
 	if kafka, ok := msg["_kafka"]; ok {
 		kConfig := kafka.(map[string]interface{})
@@ -29,9 +30,9 @@ func ProcessMsg(data []byte) (*KafkaConfig, []byte, error) {
 		} else {
 			return nil, make([]byte, 0), errors.New("no 'topic' field")
 		}
-		// check cluster
-		if cluster, ok := kConfig["cluster"]; ok {
-			kCfg.Cluster = cluster.(string)
+		// check clusters
+		if clusters, ok := kConfig["clusters"]; ok {
+			kCfg.Clusters = strings.Split(strings.ReplaceAll(clusters.(string), ", ", ","), ",")
 		}
 
 		// remove _kafka field

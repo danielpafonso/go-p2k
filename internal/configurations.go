@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"strconv"
-	"strings"
+	// "strings"
 )
 
 type PubsubConfigurations struct {
@@ -13,6 +13,10 @@ type PubsubConfigurations struct {
 }
 
 type KafkaConfigurations struct {
+	Clusters []struct {
+		Name      string   `json:"name"`
+		Endpoints []string `json:"endpoints"`
+	} `json:"clusters"`
 	Endpoints []string `json:"endpoints"`
 	UseTLS    bool     `json:"useTls"`
 	CaFile    string   `json:"caFile"`
@@ -48,8 +52,12 @@ func LoadConfigurations(filepath string) (*Configurations, error) {
 	if value, ok := os.LookupEnv("PUBSUB_SUBSCRIPTION"); ok {
 		configs.Pubsub.Subscription = value
 	}
-	if value, ok := os.LookupEnv("KAFKA_ENDPOINTS"); ok {
-		configs.Kafka.Endpoints = strings.Split(value, ",")
+	if value, ok := os.LookupEnv("KAFKA_CLUSTERS"); ok {
+		err := json.Unmarshal([]byte(value), &configs.Kafka.Clusters)
+		if err != nil {
+			return nil, err
+		}
+		// configs.Kafka.Endpoints = strings.Split(value, ",")
 	}
 	if value, ok := os.LookupEnv("KAFKA_USE_TLS"); ok {
 		configs.Kafka.UseTLS, _ = strconv.ParseBool(value)
