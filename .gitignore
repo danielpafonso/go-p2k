@@ -4,3 +4,6 @@
 
 # Build folder
 build/
+
+# Certificates folder
+test/certs
