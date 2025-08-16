@@ -21,6 +21,7 @@ type KafkaConfigurations struct {
 	CaFile    string   `json:"caFile"`
 	CrtFile   string   `json:"crtFile"`
 	KeyFile   string   `json:"keyFile"`
+	CheckCrt  bool     `json:"checkCrt"`
 }
 
 type Configurations struct {
@@ -30,7 +31,12 @@ type Configurations struct {
 
 func LoadConfigurations(filepath string) (*Configurations, error) {
 
-	var configs Configurations
+	// default values
+	configs := Configurations{
+		Kafka: KafkaConfigurations{
+			CheckCrt: true,
+		},
+	}
 
 	// read configurations file if exists
 	if _, err := os.Stat(filepath); err == nil {
