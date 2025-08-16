@@ -13,7 +13,7 @@ type KafkaConfig struct {
 
 // func ProcessMsg(data []byte) map[string]interface{} {
 func ProcessMsg(data []byte) (*KafkaConfig, []byte, error) {
-	msg := make(map[string]interface{})
+	msg := make(map[string]any)
 	err := json.Unmarshal(data, &msg)
 	if err != nil {
 		return nil, make([]byte, 0), errors.New("message not json formated")
@@ -22,7 +22,7 @@ func ProcessMsg(data []byte) (*KafkaConfig, []byte, error) {
 		Clusters: []string{"all"},
 	}
 	if kafka, ok := msg["_kafka"]; ok {
-		kConfig := kafka.(map[string]interface{})
+		kConfig := kafka.(map[string]any)
 
 		// check topic
 		if topic, ok := kConfig["topic"]; ok {
