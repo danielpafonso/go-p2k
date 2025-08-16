@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -73,6 +76,27 @@ func p2kMainLoop(sub *pubsub.Subscription, metrics *Metrics) error {
 	return nil
 }
 
+func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string) (*tls.Config, error) {
+	tlsConfig := tls.Config{}
+	// Load client certificate
+	cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig.Certificates = []tls.Certificate{cert}
+
+	// Load CA certificate
+	caCert, err := os.ReadFile(caCertFile)
+	if err != nil {
+		return nil, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig.RootCAs = caCertPool
+
+	return &tlsConfig, nil
+}
+
 func main() {
 	var configPath string
 	var serverAddr string
@@ -123,6 +147,14 @@ func main() {
 	for _, config := range configs.Kafka.Clusters {
 		cfg := sarama.NewConfig()
 		cfg.Producer.Return.Successes = true
+		if configs.Kafka.UseTLS {
+			cfg.Net.TLS.Enable = true
+			cfg.Net.TLS.Config, err = NewTLSConfig(configs.Kafka.CrtFile, configs.Kafka.KeyFile, configs.Kafka.CaFile)
+			if err != nil {
+				panic(err)
+			}
+			cfg.Net.TLS.Config.InsecureSkipVerify = !configs.Kafka.CheckCrt
+		}
 		connection, err := sarama.NewSyncProducer(config.Endpoints, cfg)
 		if err != nil {
 			panic(err)

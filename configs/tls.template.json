@@ -1,0 +1,19 @@
+{
+  "pubsub": {
+    "project": "acme",
+    "subscription": "sub-events"
+  },
+  "kafka": {
+    "clusters": [
+      {
+        "name": "kafka",
+        "endpoints": ["kafka:9095"]
+      }
+    ],
+    "useTls": true,
+    "caFile": "/app/test/certs/pem/ca-root.pem",
+    "crtFile": "/app/test/certs/pem/client-certificate.pem",
+    "keyFile": "/app/test/certs/pem/client-private-key.pem",
+    "checkCrt": false
+  }
+}

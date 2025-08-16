@@ -11,7 +11,6 @@ type KafkaConfig struct {
 	Clusters []string
 }
 
-// func ProcessMsg(data []byte) map[string]interface{} {
 func ProcessMsg(data []byte) (*KafkaConfig, []byte, error) {
 	msg := make(map[string]any)
 	err := json.Unmarshal(data, &msg)
