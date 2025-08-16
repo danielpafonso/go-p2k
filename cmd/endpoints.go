@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
+
+	"go-p2k/internal"
 )
 
 func generalHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +29,12 @@ func healthHandler(run *bool) http.HandlerFunc {
 func metricsHandler(metrics *Metrics) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(metrics.Print()))
-		return
+	}
+}
+
+func configsHandler(configs *internal.Configurations) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(configs)
 	}
 }

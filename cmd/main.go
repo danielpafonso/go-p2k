@@ -96,6 +96,7 @@ func main() {
 	// http endpoints
 	rootHandler := http.NewServeMux()
 	rootHandler.HandleFunc("/", generalHandler)
+	rootHandler.HandleFunc("/config", configsHandler(configs))
 	rootHandler.HandleFunc("/health", healthHandler(&running))
 	rootHandler.HandleFunc("/metrics", metricsHandler(metrics))
 
