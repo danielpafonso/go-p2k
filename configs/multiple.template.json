@@ -7,11 +7,11 @@
     "clusters": [
       {
         "name": "kafka1",
-        "endpoints": ["localhost:9094"]
+        "endpoints": ["localhost:9084"]
       },
       {
         "name": "kafka2",
-        "endpoints": ["localhost:9084"]
+        "endpoints": ["localhost:9094"]
       }
     ],
     "useTls": false,

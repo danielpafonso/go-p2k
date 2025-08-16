@@ -16,12 +16,11 @@ type KafkaConfigurations struct {
 		Name      string   `json:"name"`
 		Endpoints []string `json:"endpoints"`
 	} `json:"clusters"`
-	Endpoints []string `json:"endpoints"`
-	UseTLS    bool     `json:"useTls"`
-	CaFile    string   `json:"caFile"`
-	CrtFile   string   `json:"crtFile"`
-	KeyFile   string   `json:"keyFile"`
-	CheckCrt  bool     `json:"checkCrt"`
+	UseTLS   bool   `json:"useTls"`
+	CaFile   string `json:"caFile"`
+	CrtFile  string `json:"crtFile"`
+	KeyFile  string `json:"keyFile"`
+	CheckCrt bool   `json:"checkCrt"`
 }
 
 type Configurations struct {
