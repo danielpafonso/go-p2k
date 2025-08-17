@@ -74,6 +74,9 @@ func LoadConfigurations(filepath string) (*Configurations, error) {
 	if value, ok := os.LookupEnv("KAFKA_KEY_FILE"); ok {
 		configs.Kafka.KeyFile = value
 	}
+	if value, ok := os.LookupEnv("KAFKA_CHECK_CERT"); ok {
+		configs.Kafka.CheckCrt, _ = strconv.ParseBool(value)
+	}
 
 	return &configs, nil
 }
