@@ -25,13 +25,21 @@ func ProcessMsg(data []byte) (*KafkaConfig, []byte, error) {
 
 		// check topic
 		if topic, ok := kConfig["topic"]; ok {
-			kCfg.Topic = topic.(string)
+			if stopic, ok := topic.(string); ok {
+				kCfg.Topic = stopic
+			} else {
+				return nil, make([]byte, 0), errors.New("'topic' field isn't a string")
+			}
 		} else {
 			return nil, make([]byte, 0), errors.New("no 'topic' field")
 		}
 		// check clusters
 		if clusters, ok := kConfig["clusters"]; ok {
-			kCfg.Clusters = strings.Split(strings.ReplaceAll(clusters.(string), ", ", ","), ",")
+			if sclusters, ok := clusters.(string); ok {
+				kCfg.Clusters = strings.Split(strings.ReplaceAll(sclusters, ", ", ","), ",")
+			} else {
+				return nil, make([]byte, 0), errors.New("'clusters' fields isn't a string")
+			}
 		}
 
 		// remove _kafka field
