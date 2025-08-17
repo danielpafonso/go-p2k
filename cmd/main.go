@@ -169,6 +169,9 @@ func main() {
 
 	log.Println("Start main loop")
 	err = p2kMainLoop(pubsubSubscriper, metrics)
+	if err != nil {
+		panic(err)
+	}
 
 	log.Println("End")
 }
