@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TLS option for kafka
 - Script to generate certificates
 - Environment variable `KAFKA_CHECK_CERT`
+- Type check when parsing \_kafka field
 
 ### Changed
 
