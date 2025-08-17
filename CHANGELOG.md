@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Config endpoints
+- TLS option for kafka
+- Script to generate certificates
+- Environment variable `KAFKA_CHECK_CERT`
+
+### Changed
+
+- Podman Kafka version to 4.0.0
+
 ## [0.1.0]
 
 ### Add
